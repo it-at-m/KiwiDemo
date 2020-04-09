@@ -1,8 +1,8 @@
 {
     "en": {
         "appname": "Kiwi",
-        "appversion": "V1.0.3",
-        "buildno": "202001101518",
+        "appversion": "1.0.4",
+        "buildno": "202004091425",
         "search_char": "Filter by basechar [⏎ or Cntrl-Space]",
         "filter_basechar": "Basechar",
         "case_sensitive": "Aa",
@@ -51,8 +51,8 @@
     },
     "de": {
         "appname": "Kiwi",
-        "appversion": "V1.0.3",
-        "buildno": "202001101518",
+        "appversion": "1.0.4",
+        "buildno": "202004091425",
         "search_char": "Filtern nach Basiszeichen [⏎ oder Strg-Leerzeichen]",
         "filter_basechar": "Basiszeichen",
         "case_sensitive": "Aa",

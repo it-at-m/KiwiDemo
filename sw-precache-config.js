@@ -10,7 +10,7 @@
 
 /* eslint-env node */
 module.exports = {
-  "staticFileGlobs": ["/index.html", "/src/**/*", "/images/**/*", "/bower_components/**/*", "/node_modules/**/*", "/manifest.json", "/service-worker.js"],
-  "navigateFallback": "/index.html",
+  "staticFileGlobs": ["/KiwiDemo/index.html", "/KiwiDemo/src/**/*", "/KiwiDemo/images/**/*", "/KiwiDemo/bower_components/**/*", "/KiwiDemo/node_modules/**/*", "/KiwiDemo/manifest.json", "/KiwiDemo/service-worker.js"],
+  "navigateFallback": "/KiwiDemo/index.html",
   "verbose": true
 };

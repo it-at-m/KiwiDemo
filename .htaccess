@@ -37,8 +37,8 @@ RewriteRule ^(.*)$ $1 [R=200,L]
 #
 # Install global error page to throw browser on start page for unknown urls
 #
-ErrorDocument 403 /src/notfound.html
-ErrorDocument 404 /src/notfound.html
+ErrorDocument 403 /KiwiDemo/src/notfound.html
+ErrorDocument 404 /KiwiDemo/src/notfound.html
 
 #
 # Prevent listing of dirs

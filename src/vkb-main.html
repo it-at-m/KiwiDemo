@@ -54,8 +54,11 @@
         };
       }
 
-      #bufferpanel .bufferbutton {
+      #bufferpanel #clearbufferbutton {
         margin-left: 1em;
+      }
+
+      #bufferpanel #copytobutton {
         margin-right: 1em;
       }
 
@@ -79,24 +82,35 @@
         display: flex;
       }
 
-      #filterpanel .filterelem#case {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      #filterpanel .filterelem label {
-        font-size: 12px;
-        color: black;
-        display: block;
-      }
-
       #filterpanel paper-dropdown-menu {
         margin: auto;
         display: block;
-        width: 9em;
         --paper-input-container-label: {
           color: black; 
+        };
+      }
+
+      #filterpanel #filterregion {
+        width: 12em;
+      }
+
+      #filterpanel #filtercases {
+        width: 7em;
+      }
+
+      #filterpanel #filterbasechar {
+        margin-left: 0.5em;
+        margin-right: 0.5em;
+        display: block;
+        width: 5em;
+        --paper-input-container-label: {
+          color: black; 
+        };
+      }
+
+      #filterpanel #filterbasechar.serif {
+        --paper-input-container-input: {
+          font-family: serif !important;
         };
       }
 
@@ -163,15 +177,14 @@
               </iron-a11y-keys>
             </paper-input>
       
-            <div class="bufferbutton">
-              <paper-icon-button slot="suffix" icon="clear" on-tap="_clearBuffer" id="clearbufferbutton" alt="[[ localize('clear_buffer') ]]" title="[[ localize('clear_buffer') ]]">
-              </paper-icon-button>
+            <paper-icon-button icon="clear" on-tap="_clearBuffer" id="clearbufferbutton" alt="[[ localize('clear_buffer') ]]" title="[[ localize('clear_buffer') ]]">
+            </paper-icon-button>
 
-              <paper-icon-button icon="search" on-tap="_searchChar" id="searchcharbutton&quot;" alt="[[ localize('search_char') ]]" title="[[ localize('search_char') ]]">
-              </paper-icon-button>
-              <paper-icon-button id="copytobutton" icon="content-copy" on-tap="_copyToDestination" alt="" title="">
-              </paper-icon-button>
-            </div>
+            <paper-icon-button icon="search" on-tap="_searchChar" id="searchcharbutton&quot;" alt="[[ localize('search_char') ]]" title="[[ localize('search_char') ]]">
+            </paper-icon-button>
+
+            <paper-icon-button id="copytobutton" icon="content-copy" on-tap="_copyToDestination" alt="[[ localize('clipboard_copy') ]]" title="[[ localize('clipboard_copy') ]]">
+            </paper-icon-button>
           </div>
         </div>
       </div>
@@ -181,23 +194,32 @@
           <h1 id="filterheading" class="heading"> [[ localize('heading_filter') ]] </h1>
         </iron-collapse>
         <div id="filter" class="container flex-horizontal">
-          <div class="filterelem" id="case">
-            <div id="checkboxcontainer">
-              <label class="label" for="filterCaseInsensitive"> [[ localize('case_sensitive_label') ]] </label>
-              <paper-checkbox slot="prefix" id="filterCaseInsensitive" checked="{{ storage.filterCaseInsensitive }}" on-change="_runSearch" noink="" title="[[ localize('case_sensitive_hint') ]]">
-                <span class="title"> [[ localize('case_sensitive') ]] </span>
-              </paper-checkbox>
-            </div>
+          <div class="filterelem">
+            <paper-dropdown-menu class="filterelem" always-float-label="" no-animations="" noink="" label="[[ localize('filter_cases') ]]" title="[[ localize('filter_cases_hint') ]]" id="filtercases">
+              <paper-listbox id="filtercases_listbox" slot="dropdown-content" selected="{{ storage.filterCases }}" on-selected-changed="_filterCasesChanged">
+                <paper-item title="[[ localize('filter_cases_likesearch_hint') ]]">[[ localize('filter_cases_likesearch') ]]</paper-item>
+                <paper-item title="[[ localize('filter_cases_captial_hint') ]]">[[ localize('filter_cases_captial') ]]</paper-item>
+                <paper-item title="[[ localize('filter_cases_small_hint') ]]">[[ localize('filter_cases_small') ]]</paper-item>
+                <paper-item title="[[ localize('filter_cases_both_hint') ]]">[[ localize('filter_cases_both') ]]</paper-item>
+              </paper-listbox>
+            </paper-dropdown-menu>
           </div>
           <div class="filterelem">
-            <paper-dropdown-menu class="filterelem" always-float-label="" no-animations="" noink="" label="[[ localize('filter_regions') ]]" title="[[ localize('filter_regions') ]]" id="filterregion">
-              <paper-listbox id="filterregion_listbox" slot="dropdown-content" selected="[[ storage.filterRegion ]]" on-selected-changed="_filterRegionChanged">
+            <paper-dropdown-menu class="filterelem" always-float-label="" no-animations="" noink="" label="[[ localize('filter_regions') ]]" title="[[ localize('filter_regions_hint') ]]" id="filterregion">
+              <paper-listbox id="filterregion_listbox" slot="dropdown-content" selected="{{ storage.filterRegion }}" on-selected-changed="_filterRegionChanged">
                 <template is="dom-repeat" items="[[ _data.profiles ]]" as="region">
-                  <paper-item title="[[ region.name ]]">[[ region.name ]]</paper-item>
+                  <paper-item title="[[ region.descr ]]">[[ region.name ]]</paper-item>
                 </template>
               </paper-listbox>
             </paper-dropdown-menu>
           </div>
+          <iron-collapse id="collapsebasechar" opened="{{ storage.feature.basechar }}">
+            <div class="filterelem">
+              <paper-input id="filterbasechar" class$="[[ font ]]" type="text" name="basechar" always-float-label="" label="[[ localize('basechar') ]]" value="{{ _data.searchChar }}" minlength="1" maxlength="3" autocomplete="off" readonly="true" tabindex="-1">
+                <paper-icon-button slot="suffix" icon="clear" on-tap="_filterBasecharChanged">
+              </paper-icon-button></paper-input>
+            </div>
+          </iron-collapse>
           <div class="filterelem">
             <paper-button id="resetAllFilters" class="hyphen" on-tap="_resetAllFilters" noink="" raised="" alt="[[ localize('reset_all_filters') ]]" title="[[ localize('reset_all_filters') ]]">
               [[ localize('reset_all_filters') ]]
@@ -304,6 +326,9 @@ class vkbmain extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior, 
         "type": String,
         "value": "warn"
       },
+      "dfltprofile": {
+        "type": String
+      },
       "language": {
         "type": String,
         "value": "de"
@@ -363,6 +388,7 @@ class vkbmain extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior, 
 
     this.set("_data.uctext", "");
     this.set("_data.filterBasechar", "");
+    this.set("_data.searchChar", "");
     this.set("_data.replaceMode", "std"); //
     // Let the first frames (text buffer and filter) render frist
     // in order to make fast the first meaningful paints on screen
@@ -395,13 +421,18 @@ class vkbmain extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior, 
       }
 
       self.model.getAllProfiles().then(profiles => {
+        // Toogle cases value as workaround for missing event 
+        let previous = self.storage.filterCases;
+        self.set("storage.filterCases", (previous + 1) % 4);
+        self.set("storage.filterCases", previous);
         profiles.unshift({
           "seq": 0,
           "id": "",
-          "name": self.localize("filter_region_all")
+          "name": self.localize("filter_region_all"),
+          "descr": self.localize("filter_region_all_hint")
         });
         self.set("_data.profiles", profiles);
-
+      }).then(() => {
         self._promptForNews();
 
         self._runSearch();
@@ -481,10 +512,15 @@ class vkbmain extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior, 
   _resetAllFilters(event) {
     // eslint-disable-line no-unused-vars
     this.set("_data.filterBasechar", "");
-    this.set("storage.filterCaseInsensitive", false);
-    this.set("storage.filterRegion", 0);
-
-    this._runSearch();
+    this.set("_data.searchChar", "");
+    this.set("storage.filterCases", 0);
+    let self = this;
+    this.model.getAllProfiles().then(ap => {
+      let profile = ap.find(p => p.id === self.dfltprofile);
+      self.set("storage.filterRegion", profile ? profile.seq : 0);
+    }).then(() => {
+      this._runSearch();
+    });
   } //
   // Region filter changed
   //
@@ -494,6 +530,26 @@ class vkbmain extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior, 
     let seq = event.detail.value;
     this.log().debug("_filterRegionChanged(): selected=" + seq);
     this.set("storage.filterRegion", seq);
+
+    this._runSearch();
+  } //
+  // Cases filter changed
+  //
+
+
+  _filterCasesChanged(event) {
+    let seq = event.detail.value;
+    this.log().debug("_filterCasesChanged(): selected=" + seq);
+    this.set("storage.filterCases", seq);
+
+    this._runSearch();
+  }
+
+  _filterBasecharChanged(event) {
+    // eslint-disable-line no-unused-vars
+    this.log().debug("_filterBasecharChanged()");
+    this.set("_data.filterBasechar", "");
+    this.set("_data.searchChar", "");
 
     this._runSearch();
   } //
@@ -510,32 +566,9 @@ class vkbmain extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior, 
       return;
     }
 
-    let grapheme = undefined;
+    let grapheme = this._getSearchChar();
 
-    let selection = this._getBufferSelection();
-
-    if (selection.start === selection.end) {
-      this.log().debug("_searchChar(): no selection -- using last grapheme of whole text removing it.");
-
-      let graphemes = this._data.splitter.splitGraphemes(this._data.uctext);
-
-      grapheme = graphemes.slice(-1)[0];
-      this.log().debug("_searchChar(): length of last grapheme " + grapheme.length + ".");
-      this.set("_data.replaceMode", "end");
-    } else {
-      this.log().debug("_searchChar(): detected selection replacing first grapheme of selection.");
-
-      let selectionText = this._data.uctext.slice(selection.start, selection.end);
-
-      this.log().debug("_searchChar(): selected text: \"" + selectionText + "\".");
-
-      let graphemes = this._data.splitter.splitGraphemes(selectionText);
-
-      this.log().debug("_searchChar(): length of last grapheme " + selectionText.length + ".");
-      grapheme = graphemes[0];
-      this.set("_data.replaceMode", "std");
-    }
-
+    this.set("_data.searchChar", grapheme);
     let self = this;
     this.model.getBasecharByChar(grapheme).then(selectedChar => {
       self.log().debug("_searchChar(): selectedChar = \"" + selectedChar + "\".");
@@ -561,23 +594,94 @@ class vkbmain extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior, 
       }
     });
   } //
+  // Determine char to search for
+  // 
+
+
+  _getSearchChar() {
+    let grapheme = undefined;
+
+    let selection = this._getBufferSelection();
+
+    if (selection.start === selection.end) {
+      this.log().debug("_getSearchChar(): no selection -- using last grapheme of whole text removing it.");
+
+      if (this._data.uctext === "") {
+        return "";
+      }
+
+      let graphemes = this._data.splitter.splitGraphemes(this._data.uctext);
+
+      grapheme = graphemes.slice(-1)[0];
+      this.log().debug("_getSearchChar(): length of last grapheme " + grapheme.length + ".");
+      this.set("_data.replaceMode", "end");
+    } else {
+      this.log().debug("_getSearchChar(): detected selection replacing first grapheme of selection.");
+
+      let selectionText = this._data.uctext.slice(selection.start, selection.end);
+
+      this.log().debug("_getSearchChar(): selected text: \"" + selectionText + "\".");
+
+      let graphemes = this._data.splitter.splitGraphemes(selectionText);
+
+      this.log().debug("_getSearchChar(): length of last grapheme " + selectionText.length + ".");
+      grapheme = graphemes[0];
+      this.set("_data.replaceMode", "std");
+    }
+
+    return grapheme;
+  } //
   // Run action search action
   // 
 
 
   _runSearch(event) {
     // eslint-disable-line no-unused-vars
-    let seq = this.storage.filterRegion;
+    let filterSeq = this.storage.filterRegion;
 
     let profile = this._data.profiles.find(e => {
-      return e.seq === seq;
+      return e.seq === filterSeq;
     });
 
+    let casesSeq = this.storage.filterCases;
     let self = this;
-    this.model.getFilteredChars(profile ? profile.id : "", this._data.filterBasechar, "", this.storage.filterCaseInsensitive).then(chars => {
+
+    this._mapCases(casesSeq).then(cases => {
+      return this.model.getFilteredChars(profile ? profile.id : "", this._data.filterBasechar, "", cases);
+    }).then(chars => {
       self.set("_data.chars", chars);
-      self.set("_data.lastAction", "search");
     });
+  } //
+  // Map indexed cases to tags
+  //
+
+
+  _mapCases(caseIdx) {
+    switch (caseIdx) {
+      case 0:
+        {
+          // Derived from char searched
+          let char = this._data.searchChar;
+
+          if (char) {
+            return this.model.getCaseOfChar(char);
+          } else {
+            return Promise.resolve("undef");
+          }
+        }
+
+      case 1:
+        // capital
+        return Promise.resolve("capital");
+
+      case 2:
+        // small
+        return Promise.resolve("small");
+
+      case 3:
+        // both
+        return Promise.resolve("undef");
+    }
   } //
   // Handle char tapped 
   //

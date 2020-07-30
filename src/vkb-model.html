@@ -91,18 +91,17 @@ class vkbmodel extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior]
    */
 
 
-  getModelProperties() {
-    let self = this;
-    return this._ensureData(() => {
-      let name = self._getStringByXPath("/sl:stringlatin/@name", this._data.xmlDom);
+  async getModelProperties() {
+    await this._ensureData("getModelProperties()");
 
-      let dataversion = self._getStringByXPath("/sl:stringlatin/@dataversion", this._data.xmlDom);
+    let name = this._getStringByXPath("/sl:stringlatin/@name", this._data.xmlDom);
 
-      return {
-        "name": name,
-        "dataversion": dataversion
-      };
-    }, "getModelProperties()");
+    let dataversion = this._getStringByXPath("/sl:stringlatin/@dataversion", this._data.xmlDom);
+
+    return {
+      "name": name,
+      "dataversion": dataversion
+    };
   }
   /**
    * Return list of profiles in order inside the XML model
@@ -111,29 +110,33 @@ class vkbmodel extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior]
    */
 
 
-  getAllProfiles() {
-    let self = this;
-    return this._ensureData(() => {
-      let profileIds = self._getStringsByXPath("/sl:stringlatin/sl:profile/@id", this._data.xmlDom);
+  async getAllProfiles() {
+    await this._ensureData("getAllProfiles()");
 
-      let profiles = [];
-      let seq = 1; // 0 is reserved for "all"
+    let profileIds = this._getStringsByXPath("/sl:stringlatin/sl:profile/@id", this._data.xmlDom);
 
-      for (let i = 0; i < profileIds.length; i++) {
-        let xpath = "/sl:stringlatin/sl:profile[@id=" + self._getStringLiteralForXPath(profileIds[i]) + "]/sl:name[@lang=\"" + self.lang + "\"]/text()";
+    let profiles = [];
+    let seq = 1; // 0 is reserved for "all"
 
-        let profileName = self._getStringByXPath(xpath, this._data.xmlDom);
+    for (let i = 0; i < profileIds.length; i++) {
+      let xpathName = "/sl:stringlatin/sl:profile[@id=" + this._getStringLiteralForXPath(profileIds[i]) + "]/sl:name[@lang=\"" + this.lang + "\"]/text()";
 
-        profiles.push({
-          "seq": seq,
-          "id": profileIds[i],
-          "name": profileName
-        });
-        seq++;
-      }
+      let profileName = this._getStringByXPath(xpathName, this._data.xmlDom);
 
-      return profiles;
-    }, "getAllProfiles()");
+      let xpathDescr = "/sl:stringlatin/sl:profile[@id=" + this._getStringLiteralForXPath(profileIds[i]) + "]/sl:description[@lang=\"" + this.lang + "\"]/text()";
+
+      let profileDescr = this._getStringByXPath(xpathDescr, this._data.xmlDom);
+
+      profiles.push({
+        "seq": seq,
+        "id": profileIds[i],
+        "name": profileName,
+        "descr": profileDescr
+      });
+      seq++;
+    }
+
+    return profiles;
   }
   /**
    * Get chars filtered according to certain criteria
@@ -141,71 +144,64 @@ class vkbmodel extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior]
    * @param {string} profileid The profile or ""
    * @param {string} basechar The basechar 
    * @param {string} type The type of basechar: real, pseudo or ""
-   * @param {boolean} caseInsensitive Flag if basechar is case-insensitive
+   * @param {string} cases One of "capital", "small", "undef"
    * @param {boolean} onlyNormative Flag only normative chars are selected
    * @return {Promise} Array of all chars
    */
 
 
-  getFilteredChars(profileid, basechar, type, caseInsensitive = false, onlyNormative = true) {
-    let self = this;
-    return this._ensureData(() => {
-      let expr = [];
+  async getFilteredChars(profileid, basechar, type, cases, onlyNormative = true) {
+    await this._ensureData("getFilteredChars()");
+    let expr = [];
 
-      if (profileid) {
-        expr.push("sl:profile/@ref=" + self._getStringLiteralForXPath(profileid));
-      }
+    if (profileid) {
+      expr.push("sl:profile/@ref=" + this._getStringLiteralForXPath(profileid));
+    }
 
-      if (onlyNormative) {
-        expr.push("@normative=\"true\"");
-      }
+    if (onlyNormative) {
+      expr.push("@normative=\"true\"");
+    }
 
-      if (basechar) {
-        if (caseInsensitive === true) {
-          expr.push("sl:basechar/@name-ci=" + self._getStringLiteralForXPath(basechar.toLowerCase()));
-        } else {
-          expr.push("sl:basechar/@name=" + self._getStringLiteralForXPath(basechar));
-        }
-
-        if (type === "real" || type === "pseudo") {
-          expr.push("sl:basechar/@type=\"" + type + "\"");
-        }
-      }
-
-      let xpath = "";
-
-      if (expr.length === 0) {
-        xpath = "/sl:stringlatin/sl:char";
-      } else {
-        xpath = "/sl:stringlatin/sl:char[" + expr.join(" and ") + "]";
-      }
-
-      let charNodes = self._getNodesByXPath(xpath, this._data.xmlDom);
-
-      let chars = charNodes.map(n => {
-        let name = self._getStringByXPath("@name", self._data.xmlDom, n);
-
-        return {
-          "id": self._getId(name),
-          "name": name,
-          "info": self._getStringByXPath("sl:info[@lang=\"" + self.lang + "\"]/text()", self._data.xmlDom, n)
-        };
-      }); // 
-      // Sort according to unicode except for basechar, which has to be the first in any case.
-      // We assume here, that the a basechar has itsself always as basechar...
+    if (basechar) {
       //
+      // Basechar existing -> Search for basechar war requested
+      //
+      expr.push("sl:basechar/@name-ci=" + this._getStringLiteralForXPath(basechar.toLowerCase()));
 
-      chars.sort((a, b) => {
-        if (a.name === basechar) {
-          return -1;
-        } else if (b.name === basechar) {
-          return 1;
-        } else {
-          return this._data.collator.compare(a.name, b.name);
-        }
-      });
-      return chars;
-    }, "getFilteredChars()");
+      if (type === "real" || type === "pseudo") {
+        expr.push("sl:basechar/@type=\"" + type + "\"");
+      }
+    }
+
+    if (cases === "capital" || cases === "small") {
+      expr.push("((@case=\"" + cases + "\") or (@case = \"undef\"))");
+    }
+
+    let xpath = "";
+
+    if (expr.length === 0) {
+      xpath = "/sl:stringlatin/sl:char";
+    } else {
+      xpath = "/sl:stringlatin/sl:char[" + expr.join(" and ") + "]";
+    }
+
+    let self = this;
+
+    let charNodes = this._getNodesByXPath(xpath, this._data.xmlDom);
+
+    let chars = charNodes.map(n => {
+      let name = self._getStringByXPath("@name", self._data.xmlDom, n);
+
+      return {
+        "id": self._getId(name),
+        "name": name,
+        "info": self._getStringByXPath("sl:info[@lang=\"" + self.lang + "\"]/text()", self._data.xmlDom, n)
+      };
+    });
+    chars.sort((a, b) => {
+      return this._data.collator.compare(a.name, b.name);
+    });
+    return chars;
   }
   /**
    * Find basechars by char (example char "a")
@@ -218,41 +214,56 @@ class vkbmodel extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior]
    */
 
 
-  getBasecharByChar(char, type = "real", onlyNormative = true) {
-    let self = this;
-    return this._ensureData(() => {
-      let expr = [];
+  async getBasecharByChar(char, type = "real", onlyNormative = true) {
+    await this._ensureData("getBasecharByChar()");
+    let expr = [];
 
-      if (type === "real" || type === "pseudo") {
-        expr.push("@type=" + self._getStringLiteralForXPath(type));
-      }
+    if (type === "real" || type === "pseudo") {
+      expr.push("@type=" + this._getStringLiteralForXPath(type));
+    }
 
-      if (onlyNormative) {
-        expr.push("../@normative=\"true\"");
-      }
+    if (onlyNormative) {
+      expr.push("../@normative=\"true\"");
+    }
 
-      expr.push("../@name=" + self._getStringLiteralForXPath(char));
-      let xpath = "/sl:stringlatin/sl:char/sl:basechar[" + expr.join(" and ") + "]/@name";
-      let basechar = null;
+    expr.push("../@name=" + this._getStringLiteralForXPath(char));
+    let xpath = "/sl:stringlatin/sl:char/sl:basechar[" + expr.join(" and ") + "]/@name";
+    let basechar = null;
 
-      let basechars = self._getStringsByXPath(xpath, this._data.xmlDom);
+    let basechars = this._getStringsByXPath(xpath, this._data.xmlDom);
 
-      if (basechars.length === 1) {
-        basechar = basechars[0];
+    if (basechars.length === 1) {
+      basechar = basechars[0];
+    } else {
+      if (basechars.length === 0) {
+        // Fallback: Take first char, convert it to NFD and take this as basechar.
+        this.log().warn("No basechar by reverse mapping found -- fallback to NFD coversion.");
+        basechar = char.charAt(0).normalize("NFD").charAt(0);
       } else {
-        if (basechars.length === 0) {
-          // Fallback: Take first char, convert it to NFD and take this as basechar.
-          self.log().warn("No basechar by reverse mapping found -- fallback to NFD coversion.");
-          basechar = char.charAt(0).normalize("NFD").charAt(0);
-        } else {
-          basechars.sort(self._data.strComparator);
-          basechar = basechars[0];
-          self.log().warn("Basechar of char is not unique ([" + basechars.join(", ") + "]) -- choosing first in alphabetical order: \"" + basechar + "\".");
-        }
+        basechars.sort(this._data.strComparator);
+        basechar = basechars[0];
+        this.log().warn("Basechar of char is not unique ([" + basechars.join(", ") + "]) -- choosing first in alphabetical order: \"" + basechar + "\".");
       }
+    }
 
-      return basechar;
-    }, "getBasecharByChar()");
+    return basechar;
+  }
+  /**
+   * Find case of char 
+   * /sl:stringlatin/sl:char[name="a"]/@case"
+   *
+   * @param {string} char The char sequence for the grapheme
+   * @return {Promise} Strings constant describing the case
+   */
+
+
+  async getCaseOfChar(char) {
+    await this._ensureData("getCaseOfChar()");
+    let xpath = "/sl:stringlatin/sl:char[@name=" + this._getStringLiteralForXPath(char) + "]/@case";
+
+    let casing = this._getStringsByXPath(xpath, this._data.xmlDom);
+
+    return casing[0];
   }
   /**
    * Helper for running xpath queries, that result in a string list
@@ -342,35 +353,34 @@ class vkbmodel extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavior]
     return 'concat("' + s.replace(/("+)/g, '",\'$1\',"') + '")'; // eslint-disable-line quotes
   }
 
-  _ensureData(logic, tag) {
+  async _ensureData(tag) {
     if (this._data.xmlDom) {
       this.log().debug("_ensureData(): " + tag + ": Using cached model.");
-      return Promise.resolve(logic());
-    } else {
-      this.log().debug("_ensureData(): " + tag + ": Fetching model.");
-      return this._loadModel().then(logic);
+      return;
     }
+
+    this.log().debug("_ensureData(): " + tag + ": Fetching model.");
+    await this._loadModel();
   }
 
-  _loadModel() {
-    let self = this;
-    return fetch(this.resolveUrl(this.modellocation), {
+  async _loadModel() {
+    let response = await fetch(this.resolveUrl(this.modellocation), {
       "credentials": "same-origin"
-    }).then(response => {
-      if (!response.ok) {
-        throw Error(response.statusText);
-      }
-
-      self.log().debug("_loadModel(): loaded model successfully: statusCode=" + response.status + ".");
-      return response.text();
-    }).then(text => {
-      let xmlDom = new window.DOMParser().parseFromString(text, "text/xml");
-      self.log().debug("_loadModel(): parsed model successfully.");
-      self.set("_data.xmlDom", xmlDom);
-    }).catch(err => {
-      // Communication or parse errors
-      self._error(err);
     });
+
+    if (!response.ok) {
+      throw Error(response.statusText);
+    }
+
+    try {
+      this.log().debug("_loadModel(): loaded model successfully: statusCode=" + response.status + ".");
+      let xmlDom = new window.DOMParser().parseFromString((await response.text()), "text/xml");
+      this.log().debug("_loadModel(): parsed model successfully.");
+      this.set("_data.xmlDom", xmlDom);
+    } catch (err) {
+      // Communication or parse errors
+      this._error(err);
+    }
   }
 
   _getId(str) {

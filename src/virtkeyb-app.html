@@ -141,7 +141,7 @@
 
       <div id="contentarea">
         <iron-pages id="viewselector" selected="[[ page ]]" attr-for-selected="name" fallback-selection="notfound" role="main">
-          <vkb-main name="main" id="mainview" loglevel="[[ loglevel ]]" model="{{ _data.model }}" storage="{{ storage }}" helpmapping="{{ _data.helpMapping }}" mode="[[ mode ]]" inputelement="{{ inputelement }}" font$="[[ _computeStyle(storage.serifStyle) ]]">
+          <vkb-main name="main" id="mainview" loglevel="[[ loglevel ]]" model="{{ _data.model }}" storage="{{ storage }}" dfltprofile="[[ dfltprofile ]]" helpmapping="{{ _data.helpMapping }}" mode="[[ mode ]]" inputelement="{{ inputelement }}" font$="[[ _computeStyle(storage.serifStyle) ]]">
           </vkb-main>
           <vkb-history name="history" id="historyview" loglevel="[[ loglevel ]]">
           </vkb-history>
@@ -199,6 +199,10 @@ class virtkeybapp extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavi
       "loglevel": {
         "type": String,
         "value": "warn"
+      },
+      "dfltprofile": {
+        "type": String,
+        "value": "all"
       },
       "language": {
         "type": String,
@@ -322,32 +326,37 @@ class virtkeybapp extends Polymer.mixinBehaviors([SharedLogicBehavior, LogBehavi
 
 
   _updateOrResetStorageModel() {
-    const currentStorageModelVersion = 1; //
+    const currentStorageModelVersion = 2; //
     // Init local storage
     //
 
     let existingStorageModelVersion = this.storage.storageModelVersion;
     this.log().debug("_updateOrInitModel(): currentStorageModelVersion=" + currentStorageModelVersion + "; existingStorageModelVersion=" + existingStorageModelVersion + ".");
 
-    if (existingStorageModelVersion === currentStorageModelVersion) {
+    if (existingStorageModelVersion && existingStorageModelVersion === currentStorageModelVersion) {
       this.log().debug("_updateOrInitModel(): detected from local storage, that browser has been here before and model version matches -- nothing to do.");
     } else {
       this.log().debug("_updateOrInitModel(): detected from local storage, that browsers hasn't been here befor or containts an older model version -- reseting it."); //
       // Default Configuration
       //
 
+      let self = this;
       this.set("storage.automaticFocus", true);
       this.set("storage.compactView", false);
       this.set("storage.newsSeen", "");
-      this.set("storage.filterCaseInsensitive", false);
-      this.set("storage.filterRegion", 0);
+      this.$.model.getAllProfiles().then(ap => {
+        let profile = ap.find(p => p.id === self.dfltprofile);
+        self.set("storage.filterRegion", profile ? profile.seq : 0);
+      });
+      this.set("storage.filterCases", 0);
       this.set("storage.serifStyle", false); //
       // Feature-toggles
       //
 
       this.set("storage.feature", {
         "history": false,
-        "serif": false
+        "serif": false,
+        "basechar": false
       }); //
       // Version of the model
       //

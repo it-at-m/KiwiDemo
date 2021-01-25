@@ -1,8 +1,8 @@
 {
     "en": {
         "appname": "Kiwi",
-        "appversion": "1.1.0",
-        "buildno": "202008070912",
+        "appversion": "1.1.1",
+        "buildno": "202101251508",
         "search_char": "Filter by basechar [⏎ or Cntrl-Space]",
         "filter_basechar": "Basechar",
         "text": "Enter whole words here, e.g. names or addresses",
@@ -61,8 +61,8 @@
     },
     "de": {
         "appname": "Kiwi",
-        "appversion": "1.1.0",
-        "buildno": "202008070912",
+        "appversion": "1.1.1",
+        "buildno": "202101251508",
         "search_char": "Filtern nach Basiszeichen [⏎ oder Strg-Leerzeichen]",
         "filter_basechar": "Basiszeichen",
         "text": "Hier ganze Wörter eingeben, z.B. Namen oder Adressen",

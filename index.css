@@ -1,5 +1,5 @@
 
-@import url("node_modules/normalize.css/normalize.css");
+/* @import url("node_modules/normalize.css/normalize.css"); */
 
 body {
   margin: 0;
@@ -32,9 +32,11 @@ div#footer > * {
 }
 
 #itmlogo {
+  width: auto;
   height: 60px;
 }
 
 #lhmlogo {
+  width: auto;
   height: 60px;
 }
